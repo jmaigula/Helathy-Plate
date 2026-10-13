@@ -32,18 +32,6 @@
         from { transform: translateY(100%); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
-    
-    /* THE MAGIC TRICK: "mix-blend-mode: multiply" instantly makes white backgrounds invisible! */
-    .traced-food-img {
-        position: absolute;
-        width: 280%;       /* Blows the image up to crop out the empty whitespace */
-        height: 280%;
-        left: -90%;        /* Keeps the zoomed image perfectly centered */
-        top: -90%;
-        max-width: none;
-        pointer-events: none;
-        mix-blend-mode: multiply; /* Deletes the solid white background */
-    }
 </style>
 </head>
 <body class="h-[100dvh] w-screen flex flex-col items-center justify-between py-4 select-none">
@@ -109,8 +97,8 @@
         </div>
     </div>
 
-    <!-- Food Pool -->
-    <div id="food-pool" class="w-full min-h-[16rem] bg-orange-50 border-t-4 border-orange-200 p-6 flex flex-wrap justify-center items-center gap-6 overflow-visible relative z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
+    <!-- Food Pool (Increased gap so zoomed images fit naturally) -->
+    <div id="food-pool" class="w-full min-h-[16rem] bg-orange-50 border-t-4 border-orange-200 p-8 flex flex-wrap justify-center items-center gap-10 sm:gap-14 overflow-visible relative z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
         <!-- Foods generated here -->
     </div>
 
@@ -179,14 +167,12 @@
         
         foods.forEach((food) => {
             const el = document.createElement('div');
-            // Fixed dimensions for the physical dragging hit-box
-            el.className = 'draggable relative flex items-center justify-center touch-none z-30 cursor-grab shrink-0 transition-transform hover:scale-110';
-            el.style.width = '110px';
-            el.style.height = '110px';
+            // MAGIC FIX: mix-blend-multiply is now on the container itself!
+            el.className = 'draggable relative flex items-center justify-center touch-none z-40 cursor-grab shrink-0 mix-blend-multiply w-16 h-16 sm:w-20 sm:h-20';
             el.dataset.group = food.group;
             
-            // Render the image with the blend-mode applied
-            el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="traced-food-img">`;
+            // Image visually zooms by 2.6x to crop white space, but physical box stays small!
+            el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="w-full h-full object-contain pointer-events-none" style="transform: scale(2.6); transform-origin: center;">`;
             
             pool.appendChild(el);
 
@@ -196,20 +182,23 @@
             el.addEventListener('pointerdown', (e) => {
                 isDragging = true;
                 el.setPointerCapture(e.pointerId);
-                el.style.zIndex = 1000;
-                startX = e.clientX;
-                startY = e.clientY;
                 
+                // Get accurate starting position
                 const rect = el.getBoundingClientRect();
                 initialLeft = rect.left;
                 initialTop = rect.top;
+                startX = e.clientX;
+                startY = e.clientY;
                 
                 if (el.parentElement === pool) {
                     pool.removeChild(el);
                     document.body.appendChild(el);
+                    
+                    // Set absolute position based on exact grab location
                     el.style.position = 'absolute';
                     el.style.left = `${initialLeft}px`;
                     el.style.top = `${initialTop}px`;
+                    el.style.zIndex = '1000';
                 }
             });
 
@@ -225,7 +214,7 @@
                 if (!isDragging) return;
                 isDragging = false;
                 el.releasePointerCapture(e.pointerId);
-                el.style.zIndex = '';
+                el.style.zIndex = '40';
 
                 const elRect = el.getBoundingClientRect();
                 const pRect = plateContainer.getBoundingClientRect();
@@ -237,73 +226,4 @@
                     elRect.bottom < pRect.bottom
                 );
 
-                if (inPlate) {
-                    plateContainer.appendChild(el);
-                    const localLeft = elRect.left - pRect.left;
-                    const localTop = elRect.top - pRect.top;
-                    el.style.position = 'absolute';
-                    el.style.left = `${localLeft}px`;
-                    el.style.top = `${localTop}px`;
-                    playDing();
-                } else {
-                    document.body.removeChild(el);
-                    pool.appendChild(el);
-                    el.style.position = 'relative';
-                    el.style.left = 'auto';
-                    el.style.top = 'auto';
-                }
-            });
-        });
-    }
-
-    document.getElementById('check-btn').addEventListener('click', () => {
-        const itemsOnPlate = plateContainer.querySelectorAll('.draggable');
-        if (itemsOnPlate.length === 0) {
-            const err = document.getElementById('error-msg');
-            err.style.opacity = '1';
-            setTimeout(() => err.style.opacity = '0', 2000);
-            return;
-        }
-
-        const groupsPresent = new Set();
-        itemsOnPlate.forEach(item => groupsPresent.add(item.dataset.group));
-
-        ["Grains", "Vegetables", "Fruits", "Proteins", "Dairy", "Nuts"].forEach(group => {
-            const checkEl = document.getElementById(`check-${group}`);
-            if (groupsPresent.has(group)) {
-                checkEl.classList.remove('bg-gray-200');
-                checkEl.classList.add('bg-green-500');
-                checkEl.innerHTML = '✓';
-            } else {
-                checkEl.classList.remove('bg-green-500');
-                checkEl.classList.add('bg-gray-200');
-                checkEl.innerHTML = '';
-            }
-        });
-
-        document.getElementById('nutrition-panel').classList.add('show');
-    });
-
-    document.getElementById('reset-btn').addEventListener('click', () => {
-        document.getElementById('nutrition-panel').classList.remove('show');
-        const itemsOnPlate = plateContainer.querySelectorAll('.draggable');
-        itemsOnPlate.forEach(item => item.remove());
-        initGame();
-    });
-
-    document.getElementById('save-btn').addEventListener('click', () => {
-        const btn = document.getElementById('save-btn');
-        btn.innerText = "Saving...";
-        html2canvas(plateContainer, { useCORS: true, allowTaint: true }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'healthy_plate.png';
-            link.href = canvas.toDataURL();
-            link.click();
-            btn.innerText = "Save Picture";
-        });
-    });
-
-    window.onload = initGame;
-</script>
-</body>
-</html>
+                if (in
