@@ -33,16 +33,16 @@
         to { transform: translateY(0); opacity: 1; }
     }
     
-    /* Safely zooms past the transparent whitespace without breaking the drag size */
+    /* THE MAGIC TRICK: "mix-blend-mode: multiply" instantly makes white backgrounds invisible! */
     .traced-food-img {
         position: absolute;
-        width: 250%;
-        height: 250%;
-        left: -75%;
-        top: -75%;
+        width: 280%;       /* Blows the image up to crop out the empty whitespace */
+        height: 280%;
+        left: -90%;        /* Keeps the zoomed image perfectly centered */
+        top: -90%;
         max-width: none;
         pointer-events: none;
-        filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.35));
+        mix-blend-mode: multiply; /* Deletes the solid white background */
     }
 </style>
 </head>
@@ -179,13 +179,13 @@
         
         foods.forEach((food) => {
             const el = document.createElement('div');
-            // Strict, unchangeable dimensions lock the physical drag size
+            // Fixed dimensions for the physical dragging hit-box
             el.className = 'draggable relative flex items-center justify-center touch-none z-30 cursor-grab shrink-0 transition-transform hover:scale-110';
             el.style.width = '110px';
             el.style.height = '110px';
             el.dataset.group = food.group;
             
-            // Just the picture, zero cards, zero text.
+            // Render the image with the blend-mode applied
             el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="traced-food-img">`;
             
             pool.appendChild(el);
@@ -205,7 +205,6 @@
                 initialTop = rect.top;
                 
                 if (el.parentElement === pool) {
-                    // Removed the code that changed the width/height to fix the explosion bug!
                     pool.removeChild(el);
                     document.body.appendChild(el);
                     el.style.position = 'absolute';
