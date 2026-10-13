@@ -17,10 +17,27 @@
     .draggable {
         cursor: grab;
         touch-action: none;
+        width: 80px;
+        height: 80px;
+        position: relative;
+        z-index: 40;
     }
     .draggable:active {
         cursor: grabbing;
     }
+    
+    /* THE FIX: No 'transform: scale' is used, preventing the browser from chopping the edges! */
+    .traced-food-img {
+        position: absolute;
+        width: 260%;
+        height: 260%;
+        left: -80%;
+        top: -80%;
+        object-fit: contain;
+        mix-blend-mode: multiply; /* Makes the white backgrounds invisible */
+        pointer-events: none; /* Ensures the large invisible edges don't block clicks */
+    }
+
     #nutrition-panel {
         display: none;
     }
@@ -97,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Food Pool (Increased gap so zoomed images fit naturally) -->
+    <!-- Food Pool -->
     <div id="food-pool" class="w-full min-h-[16rem] bg-orange-50 border-t-4 border-orange-200 p-8 flex flex-wrap justify-center items-center gap-10 sm:gap-14 overflow-visible relative z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
         <!-- Foods generated here -->
     </div>
@@ -167,12 +184,11 @@
         
         foods.forEach((food) => {
             const el = document.createElement('div');
-            // MAGIC FIX: mix-blend-multiply is now on the container itself!
-            el.className = 'draggable relative flex items-center justify-center touch-none z-40 cursor-grab shrink-0 mix-blend-multiply w-16 h-16 sm:w-20 sm:h-20';
+            el.className = 'draggable flex items-center justify-center shrink-0 transition-transform hover:scale-110';
             el.dataset.group = food.group;
             
-            // Image visually zooms by 2.6x to crop white space, but physical box stays small!
-            el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="w-full h-full object-contain pointer-events-none" style="transform: scale(2.6); transform-origin: center;">`;
+            // Replaced the buggy scale with the bulletproof traced-food-img CSS class
+            el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="traced-food-img">`;
             
             pool.appendChild(el);
 
@@ -183,7 +199,6 @@
                 isDragging = true;
                 el.setPointerCapture(e.pointerId);
                 
-                // Get accurate starting position
                 const rect = el.getBoundingClientRect();
                 initialLeft = rect.left;
                 initialTop = rect.top;
@@ -194,7 +209,6 @@
                     pool.removeChild(el);
                     document.body.appendChild(el);
                     
-                    // Set absolute position based on exact grab location
                     el.style.position = 'absolute';
                     el.style.left = `${initialLeft}px`;
                     el.style.top = `${initialTop}px`;
@@ -226,4 +240,73 @@
                     elRect.bottom < pRect.bottom
                 );
 
-                if (in
+                if (inPlate) {
+                    plateContainer.appendChild(el);
+                    const localLeft = elRect.left - pRect.left;
+                    const localTop = elRect.top - pRect.top;
+                    el.style.position = 'absolute';
+                    el.style.left = `${localLeft}px`;
+                    el.style.top = `${localTop}px`;
+                    playDing();
+                } else {
+                    document.body.removeChild(el);
+                    pool.appendChild(el);
+                    el.style.position = 'relative';
+                    el.style.left = 'auto';
+                    el.style.top = 'auto';
+                }
+            });
+        });
+    }
+
+    document.getElementById('check-btn').addEventListener('click', () => {
+        const itemsOnPlate = plateContainer.querySelectorAll('.draggable');
+        if (itemsOnPlate.length === 0) {
+            const err = document.getElementById('error-msg');
+            err.style.opacity = '1';
+            setTimeout(() => err.style.opacity = '0', 2000);
+            return;
+        }
+
+        const groupsPresent = new Set();
+        itemsOnPlate.forEach(item => groupsPresent.add(item.dataset.group));
+
+        ["Grains", "Vegetables", "Fruits", "Proteins", "Dairy", "Nuts"].forEach(group => {
+            const checkEl = document.getElementById(`check-${group}`);
+            if (groupsPresent.has(group)) {
+                checkEl.classList.remove('bg-gray-200');
+                checkEl.classList.add('bg-green-500');
+                checkEl.innerHTML = '✓';
+            } else {
+                checkEl.classList.remove('bg-green-500');
+                checkEl.classList.add('bg-gray-200');
+                checkEl.innerHTML = '';
+            }
+        });
+
+        document.getElementById('nutrition-panel').classList.add('show');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        document.getElementById('nutrition-panel').classList.remove('show');
+        const itemsOnPlate = plateContainer.querySelectorAll('.draggable');
+        itemsOnPlate.forEach(item => item.remove());
+        initGame();
+    });
+
+    document.getElementById('save-btn').addEventListener('click', () => {
+        const btn = document.getElementById('save-btn');
+        btn.innerText = "Saving...";
+        html2canvas(plateContainer, { useCORS: true, allowTaint: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'healthy_plate.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            btn.innerText = "Save Picture";
+        });
+    });
+
+    window.onload = initGame;
+</script>
+</body>
+</html>
