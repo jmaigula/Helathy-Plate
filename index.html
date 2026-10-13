@@ -50,16 +50,46 @@
     <div id="plate-container" class="relative w-full max-w-4xl flex-grow flex items-center justify-center border-4 border-dashed border-gray-300 rounded-3xl bg-white shadow-inner mx-4 overflow-visible">
         <div class="absolute inset-0 w-full h-full p-4 pointer-events-none">
             <svg viewBox="0 0 800 600" class="w-full h-full drop-shadow-md">
+                <!-- Plate Base -->
                 <rect x="150" y="150" width="550" height="400" rx="40" fill="#ffffff" stroke="#4b5563" stroke-width="12"/>
+                
+                <!-- Fruits Zone -->
                 <rect x="170" y="230" width="120" height="300" rx="30" fill="#f97316" stroke="#c2410c" stroke-width="6"/>
+                <text x="230" y="370" font-family="'Comic Sans MS', cursive" font-size="28" font-weight="bold" fill="#5d4037" text-anchor="middle">Fruits</text>
+                <text x="230" y="405" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">水果類</text>
+
+                <!-- Vegetables Zone -->
                 <rect x="310" y="210" width="130" height="310" rx="30" fill="#84cc16" stroke="#4d7c0f" stroke-width="6"/>
+                <text x="375" y="350" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">蔬菜類</text>
+                <text x="375" y="385" font-family="'Comic Sans MS', cursive" font-size="28" font-weight="bold" fill="#5d4037" text-anchor="middle">Vegetables</text>
+
+                <!-- Proteins Zone -->
                 <rect x="460" y="170" width="220" height="150" rx="30" fill="#ec4899" stroke="#be185d" stroke-width="6"/>
+                <text x="570" y="235" font-family="'Comic Sans MS', cursive" font-size="28" font-weight="bold" fill="#5d4037" text-anchor="middle">Proteins</text>
+                <text x="570" y="270" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">豆魚蛋肉類</text>
+
+                <!-- Grains Zone -->
                 <rect x="470" y="340" width="210" height="180" rx="30" fill="#eab308" stroke="#a16207" stroke-width="6"/>
+                <text x="575" y="415" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">全穀雜糧類</text>
+                <text x="575" y="450" font-family="'Comic Sans MS', cursive" font-size="28" font-weight="bold" fill="#5d4037" text-anchor="middle">Grains</text>
+
+                <!-- Center Divider -->
                 <circle cx="430" cy="330" r="25" fill="#f3f4f6" stroke="#9ca3af" stroke-width="8"/>
+
+                <!-- Dairy Zone -->
                 <circle cx="150" cy="190" r="80" fill="#38bdf8" stroke="#0284c7" stroke-width="8"/>
                 <circle cx="150" cy="190" r="60" fill="none" stroke="#e0f2fe" stroke-width="4"/>
+                <text x="150" y="180" font-family="'Comic Sans MS', cursive" font-size="28" font-weight="bold" fill="#5d4037" text-anchor="middle">Dairy</text>
+                <text x="150" y="215" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">乳品類</text>
+
+                <!-- Nuts and Seeds Zone -->
+                <text x="390" y="25" font-family="'Comic Sans MS', cursive" font-size="32" font-weight="bold" fill="#5d4037" text-anchor="middle">Nuts and Seeds</text>
                 <circle cx="390" cy="110" r="75" fill="#d4a373" stroke="#8b5a2b" stroke-width="8"/>
                 <circle cx="390" cy="110" r="55" fill="none" stroke="#faedcd" stroke-width="4"/>
+                <text x="390" y="105" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">堅果</text>
+                <text x="390" y="135" font-family="'Comic Sans MS', cursive" font-size="22" font-weight="bold" fill="#ffffff" opacity="0.8" text-anchor="middle">種子類</text>
+
+                <!-- Chopsticks -->
                 <line x1="720" y1="160" x2="750" y2="480" stroke="#4b5563" stroke-width="14" stroke-linecap="round"/>
                 <line x1="750" y1="160" x2="780" y2="480" stroke="#4b5563" stroke-width="14" stroke-linecap="round"/>
             </svg>
@@ -109,7 +139,6 @@
         osc.stop(audioCtx.currentTime + 0.3);
     }
 
-    // Applying a massive forced zoom directly to the images to hide the transparent borders
     const imgClasses = "w-full h-full object-contain pointer-events-none";
     const imgStyle = "transform: scale(3.5);";
     
