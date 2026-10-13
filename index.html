@@ -32,6 +32,18 @@
         from { transform: translateY(100%); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
+    
+    /* Safely zooms past the transparent whitespace without breaking the drag size */
+    .traced-food-img {
+        position: absolute;
+        width: 250%;
+        height: 250%;
+        left: -75%;
+        top: -75%;
+        max-width: none;
+        pointer-events: none;
+        filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.35));
+    }
 </style>
 </head>
 <body class="h-[100dvh] w-screen flex flex-col items-center justify-between py-4 select-none">
@@ -136,22 +148,19 @@
         osc.stop(audioCtx.currentTime + 0.3);
     }
 
-    const imgClasses = "w-full h-full object-contain pointer-events-none";
-    const imgStyle = "transform: scale(3.5); filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.3));";
-    
     const foods = [
-        { name: "Rice", group: "Grains", img: `<img src="1.png" alt="Rice" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Broccoli", group: "Vegetables", img: `<img src="2.png" alt="Broccoli" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Banana", group: "Fruits", img: `<img src="3.png" alt="Banana" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Fish", group: "Proteins", img: `<img src="4.png" alt="Fish" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Yogurt", group: "Dairy", img: `<img src="5.png" alt="Yogurt" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Almonds", group: "Nuts", img: `<img src="6.png" alt="Almonds" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Peanuts", group: "Nuts", img: `<img src="7.png" alt="Peanuts" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Steak", group: "Proteins", img: `<img src="8.png" alt="Steak" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Apple", group: "Fruits", img: `<img src="9.png" alt="Apple" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Cabbage", group: "Vegetables", img: `<img src="10.png" alt="Cabbage" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Potato", group: "Vegetables", img: `<img src="11.png" alt="Potato" class="${imgClasses}" style="${imgStyle}">` },
-        { name: "Corn", group: "Vegetables", img: `<img src="12.png" alt="Corn" class="${imgClasses}" style="${imgStyle}">` }
+        { name: "Rice", group: "Grains", file: "1.png" },
+        { name: "Broccoli", group: "Vegetables", file: "2.png" },
+        { name: "Banana", group: "Fruits", file: "3.png" },
+        { name: "Fish", group: "Proteins", file: "4.png" },
+        { name: "Yogurt", group: "Dairy", file: "5.png" },
+        { name: "Almonds", group: "Nuts", file: "6.png" },
+        { name: "Peanuts", group: "Nuts", file: "7.png" },
+        { name: "Steak", group: "Proteins", file: "8.png" },
+        { name: "Apple", group: "Fruits", file: "9.png" },
+        { name: "Cabbage", group: "Vegetables", file: "10.png" },
+        { name: "Potato", group: "Vegetables", file: "11.png" },
+        { name: "Corn", group: "Vegetables", file: "12.png" }
     ];
 
     const pool = document.getElementById('food-pool');
@@ -170,12 +179,14 @@
         
         foods.forEach((food) => {
             const el = document.createElement('div');
-            // NO BACKGROUND, NO BORDER, NO SHADOW. Just an invisible container.
-            el.className = 'draggable relative flex items-center justify-center touch-none transition-transform hover:scale-110 w-24 h-24 sm:w-28 sm:h-28 shrink-0 z-30 cursor-grab';
+            // Strict, unchangeable dimensions lock the physical drag size
+            el.className = 'draggable relative flex items-center justify-center touch-none z-30 cursor-grab shrink-0 transition-transform hover:scale-110';
+            el.style.width = '110px';
+            el.style.height = '110px';
             el.dataset.group = food.group;
             
-            // ONLY the image is added. NO TEXT LABEL AT ALL.
-            el.innerHTML = food.img;
+            // Just the picture, zero cards, zero text.
+            el.innerHTML = `<img src="${food.file}" alt="${food.name}" class="traced-food-img">`;
             
             pool.appendChild(el);
 
@@ -194,9 +205,7 @@
                 initialTop = rect.top;
                 
                 if (el.parentElement === pool) {
-                    el.style.width = `${rect.width}px`;
-                    el.style.height = `${rect.height}px`;
-                    
+                    // Removed the code that changed the width/height to fix the explosion bug!
                     pool.removeChild(el);
                     document.body.appendChild(el);
                     el.style.position = 'absolute';
@@ -243,8 +252,6 @@
                     el.style.position = 'relative';
                     el.style.left = 'auto';
                     el.style.top = 'auto';
-                    el.style.width = 'auto';
-                    el.style.height = 'auto';
                 }
             });
         });
